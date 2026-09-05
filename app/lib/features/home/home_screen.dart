@@ -311,7 +311,7 @@ class _SpecialCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(height: 112, width: 168, child: RemotePhoto(imageUrl: product.imageUrl)),
+            SizedBox(height: 112, width: 168, child: RemotePhoto(imageUrl: product.imageUrl, fit: BoxFit.contain)),
             const SizedBox(height: 9),
             Text(product.name, maxLines: 1, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5)),
             const SizedBox(height: 3),

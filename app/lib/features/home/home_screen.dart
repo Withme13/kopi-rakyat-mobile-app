@@ -201,7 +201,7 @@ class HomeScreen extends ConsumerWidget {
               child: SectionHeader(title: 'Spesial Hari Ini', onSeeAll: () => context.go('/menu')),
             ),
             SizedBox(
-              height: 196,
+              height: 236,
               child: drinksAsync.when(
                 data: (drinks) {
                   if (drinks.isEmpty) {
@@ -311,9 +311,15 @@ class _SpecialCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(height: 112, width: 168, child: RemotePhoto(imageUrl: product.imageUrl, fit: BoxFit.contain)),
+            SizedBox(
+              width: 168,
+              child: AspectRatio(aspectRatio: 1.15, child: RemotePhoto(imageUrl: product.imageUrl)),
+            ),
             const SizedBox(height: 9),
-            Text(product.name, maxLines: 1, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5)),
+            Text(product.name,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5, height: 1.2)),
             const SizedBox(height: 3),
             Text(product.description,
                 maxLines: 1,

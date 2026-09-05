@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../data/catalog_meta.dart';
 import '../../data/providers.dart';
 import '../../models/fulfilment_mode.dart';
 import '../../models/product.dart';
@@ -26,6 +25,7 @@ class HomeScreen extends ConsumerWidget {
     final storesAsync = ref.watch(storesProvider);
     final drinksAsync = ref.watch(drinksProvider);
     final vouchersAsync = ref.watch(vouchersProvider);
+    final featuredDrink = drinksAsync.valueOrNull?.firstOrNull;
 
     final userName = profileAsync.value?.fullName ?? (isGuest ? 'Fais' : 'Rangga');
 
@@ -159,14 +159,14 @@ class HomeScreen extends ConsumerWidget {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(20),
                   child: SizedBox(
-                    height: 154,
+                    height: 162,
                     child: Row(
                       children: [
                         Expanded(
                           flex: 5,
                           child: Container(
                             color: AppColors.panel,
-                            padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
+                            padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               mainAxisAlignment: MainAxisAlignment.end,
@@ -182,12 +182,14 @@ class HomeScreen extends ConsumerWidget {
                                     style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 21, height: 1.1, letterSpacing: -0.02)),
                                 const SizedBox(height: 7),
                                 Text('Setiap pembelian varian Signature Latte',
-                                    style: TextStyle(color: Colors.white.withValues(alpha: 0.65), fontSize: 11.5, height: 1.45)),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(color: Colors.white.withValues(alpha: 0.65), fontSize: 11.5, height: 1.3)),
                               ],
                             ),
                           ),
                         ),
-                        Expanded(flex: 4, child: PhotoSlot(radius: 0)),
+                        Expanded(flex: 4, child: RemotePhoto(imageUrl: featuredDrink?.imageUrl, radius: 0)),
                       ],
                     ),
                   ),
@@ -199,21 +201,28 @@ class HomeScreen extends ConsumerWidget {
               child: SectionHeader(title: 'Spesial Hari Ini', onSeeAll: () => context.go('/menu')),
             ),
             SizedBox(
-              height: 178,
+              height: 196,
               child: drinksAsync.when(
-                data: (drinks) => ListView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  children: [
-                    for (final special in specialsToday) ...[
-                      _SpecialCard(
-                        promo: special,
-                        product: drinks.where((p) => p.slug == special.productSlug).firstOrNull,
+                data: (drinks) {
+                  if (drinks.isEmpty) {
+                    return Center(
+                      child: Text(
+                        'Belum ada produk minuman. Tambahkan data di tabel products.',
+                        style: TextStyle(fontSize: 12.5, color: AppColors.inkAlpha(0.55)),
                       ),
-                      const SizedBox(width: 12),
+                    );
+                  }
+                  return ListView(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    children: [
+                      for (final drink in drinks.take(8)) ...[
+                        _SpecialCard(product: drink),
+                        const SizedBox(width: 12),
+                      ],
                     ],
-                  ],
-                ),
+                  );
+                },
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (e, _) => Center(child: Text('Gagal memuat menu: $e')),
               ),
@@ -289,27 +298,29 @@ class HomeScreen extends ConsumerWidget {
 }
 
 class _SpecialCard extends StatelessWidget {
-  const _SpecialCard({required this.promo, required this.product});
+  const _SpecialCard({required this.product});
 
-  final PromoCard promo;
-  final Product? product;
+  final Product product;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: product == null ? null : () => context.push('/product/${product!.slug}'),
+      onTap: () => context.push('/product/${product.slug}'),
       child: SizedBox(
         width: 168,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(height: 112, width: 168, child: RemotePhoto(imageUrl: product?.imageUrl)),
+            SizedBox(height: 112, width: 168, child: RemotePhoto(imageUrl: product.imageUrl)),
             const SizedBox(height: 9),
-            Text(promo.name, maxLines: 1, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5)),
+            Text(product.name, maxLines: 1, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5)),
             const SizedBox(height: 3),
-            Text(promo.sub ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11.5, color: AppColors.inkAlpha(0.55))),
+            Text(product.description,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 11.5, color: AppColors.inkAlpha(0.55))),
             const SizedBox(height: 8),
-            PriceTag(text: promo.priceLabel),
+            PriceTag(text: formatRupiah(product.basePrice)),
           ],
         ),
       ),

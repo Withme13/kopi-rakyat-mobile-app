@@ -13,8 +13,9 @@ app.use(express.json());
 const authMiddleware = (req, res, next) => {
   const header = req.headers.authorization || '';
   const token = header.startsWith('Bearer ') ? header.replace('Bearer ', '') : '';
+  const expectedToken = process.env.POS_API_KEY || process.env.POS_API_KEY_HASH;
 
-  if (token !== process.env.POS_API_KEY) {
+  if (!expectedToken || token !== expectedToken) {
     return res.status(401).json({ success: false, message: 'Unauthorized' });
   }
 

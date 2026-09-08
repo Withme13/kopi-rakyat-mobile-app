@@ -3,13 +3,15 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/cart_line.dart';
 import '../../models/fulfilment_mode.dart';
 import '../../models/order.dart';
+import '../../services/pos_api_service.dart';
 import 'payment_gateway.dart';
 
 class OrderRepository {
-  OrderRepository(this._client, this._paymentGateway);
+  OrderRepository(this._client, this._paymentGateway, this._posApiService);
 
   final SupabaseClient _client;
   final PaymentGateway _paymentGateway;
+  final PosApiService _posApiService;
 
   /// Charges via [PaymentGateway] then atomically places the order through
   /// the `place_order` RPC (see `supabase/migrations`), which also grants
@@ -49,7 +51,34 @@ class OrderRepository {
       'p_items': lines.map((l) => l.toOrderItem()).toList(),
     });
 
-    return fetchOrder(row['id'] as String);
+    final orderId = row['id'] as String;
+
+    try {
+      await _posApiService.sendOrder(
+        orderId: orderId,
+        items: lines
+            .map((line) => {
+                  'product_id': line.product.id,
+                  'product_name': line.product.name,
+                  'qty': line.qty,
+                  'price': line.unitPrice,
+                  'notes': line.note ?? '',
+                })
+            .toList(),
+        total: total,
+        paymentMethod: paymentMethod,
+        fulfilmentMode: fulfilmentMode.db,
+        storeId: storeId,
+        tableNumber: tableNumber,
+        subtotal: subtotal,
+        discount: discount,
+        deliveryFee: deliveryFee,
+      );
+    } catch (e) {
+      throw StateError('Order dibuat di app, tapi gagal dikirim ke POS: $e');
+    }
+
+    return fetchOrder(orderId);
   }
 
   Future<AppOrder> fetchOrder(String orderId) async {

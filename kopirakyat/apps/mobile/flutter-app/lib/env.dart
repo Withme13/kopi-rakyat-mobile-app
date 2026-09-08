@@ -7,6 +7,8 @@ class Env {
 
   static const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
   static const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+  static const posBaseUrl = String.fromEnvironment('POS_BASE_URL', defaultValue: '');
+  static const posApiKey = String.fromEnvironment('POS_API_KEY', defaultValue: '');
 
   static bool get isConfigured => supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty;
 }

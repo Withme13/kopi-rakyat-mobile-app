@@ -1,11 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../env.dart';
 import '../models/option.dart';
 import '../models/product.dart';
 import '../models/reward.dart';
 import '../models/store.dart';
 import '../models/voucher.dart';
+import '../services/pos_api_service.dart';
 import 'repositories/auth_repository.dart';
 import 'repositories/order_repository.dart';
 import 'repositories/payment_gateway.dart';
@@ -30,8 +32,15 @@ final rewardRepositoryProvider =
 final profileRepositoryProvider =
     Provider<ProfileRepository>((ref) => ProfileRepository(ref.watch(supabaseClientProvider)));
 final paymentGatewayProvider = Provider<PaymentGateway>((ref) => SimulatedPaymentGateway());
+final posApiServiceProvider = Provider<PosApiService>(
+  (ref) => PosApiService(baseUrl: Env.posBaseUrl, apiKey: Env.posApiKey),
+);
 final orderRepositoryProvider = Provider<OrderRepository>(
-  (ref) => OrderRepository(ref.watch(supabaseClientProvider), ref.watch(paymentGatewayProvider)),
+  (ref) => OrderRepository(
+    ref.watch(supabaseClientProvider),
+    ref.watch(paymentGatewayProvider),
+    ref.watch(posApiServiceProvider),
+  ),
 );
 
 final authStateChangesProvider = StreamProvider<AuthState>(

@@ -1,0 +1,15 @@
+{
+  "name": "kopirakyat",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:admin": "npm --prefix apps/admin/nextjs-dashboard run dev",
+    "dev:pos": "npm --prefix apps/pos/pos-backend run dev",
+    "lint": "echo \"No workspace lint configured yet\"",
+    "test": "echo \"No workspace tests configured yet\""
+  }
+}

@@ -1,0 +1,15 @@
+node_modules
+.next
+dist
+.env
+.env.local
+.DS_Store
+coverage
+*.log
+.flutter-plugins
+.flutter-plugins-dependencies
+.dart_tool
+.packages
+.pub-cache
+.pub
+build/

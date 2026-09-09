@@ -55,24 +55,28 @@ class OrderRepository {
 
     try {
       await _posApiService.sendOrder(
-        orderId: orderId,
-        items: lines
-            .map((line) => {
-                  'product_id': line.product.id,
-                  'product_name': line.product.name,
-                  'qty': line.qty,
-                  'price': line.unitPrice,
-                  'notes': line.note ?? '',
-                })
-            .toList(),
-        total: total,
-        paymentMethod: paymentMethod,
-        fulfilmentMode: fulfilmentMode.db,
+        externalOrderId: orderId,
+        tableName: tableNumber,
         storeId: storeId,
-        tableNumber: tableNumber,
-        subtotal: subtotal,
+        fulfilmentMode: fulfilmentMode.db,
+        paymentMethod: paymentMethod,
+        voucherCode: voucherCode,
         discount: discount,
         deliveryFee: deliveryFee,
+        items: lines
+            .map((line) => PosOrderItem(
+                  menuItemId: line.product.id,
+                  qty: line.qty,
+                  note: line.note,
+                  modifiers: [
+                    if (line.size != null) line.size!,
+                    if (line.milk != null) line.milk!,
+                    if (line.ice != null) line.ice!,
+                    if (line.sugar != null) line.sugar!,
+                    if (line.extraShot) 'Extra shot',
+                  ],
+                ))
+            .toList(),
       );
     } catch (e) {
       throw StateError('Order dibuat di app, tapi gagal dikirim ke POS: $e');

@@ -45,6 +45,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     try {
       final order = await ref.read(orderRepositoryProvider).placeOrder(
             storeId: store.id,
+            storeName: store.name,
             fulfilmentMode: cart.fulfilmentMode,
             tableNumber: cart.table,
             paymentMethod: cart.paymentMethod,

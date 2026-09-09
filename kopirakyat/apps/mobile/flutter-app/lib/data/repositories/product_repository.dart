@@ -5,6 +5,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/option.dart';
 import '../../models/product.dart';
 
+/// Backed by the POS's real `menus`/`menu_categories` tables — the
+/// prototype's `products`/`option_groups`/`option_values` schema was never
+/// built on any Supabase project, so those calls always failed.
 class ProductRepository {
   ProductRepository(this._client);
 
@@ -14,46 +17,19 @@ class ProductRepository {
   Future<List<Product>> fetchDrinks() async {
     try {
       final rows = await _client
-          .from('products')
-          .select('*, categories(key)')
-          .eq('kind', 'drink')
-          .eq('active', true)
-          .order('sort_order')
+          .from('menus')
+          .select('*, menu_categories(name)')
+          .eq('is_active', true)
           .timeout(_queryTimeout);
-      return rows.map((r) => Product.fromMap(r)).toList();
+      return rows.map((r) => Product.fromMenuMap(r)).toList();
     } on TimeoutException {
       throw Exception('Koneksi ke server terlalu lama saat memuat menu minuman');
     }
   }
 
-  Future<List<Product>> fetchMerch() async {
-    try {
-      final rows = await _client
-          .from('products')
-          .select('*, categories(key)')
-          .eq('kind', 'merch')
-          .eq('active', true)
-          .order('sort_order')
-          .timeout(_queryTimeout);
-      return rows.map((r) => Product.fromMap(r)).toList();
-    } on TimeoutException {
-      throw Exception('Koneksi ke server terlalu lama saat memuat data merch');
-    }
-  }
+  // The POS doesn't distinguish drinks/merch — there's no merch catalog yet.
+  Future<List<Product>> fetchMerch() async => const [];
 
-  Future<List<OptionGroup>> fetchOptionGroups() async {
-    try {
-      final groups = await _client.from('option_groups').select().order('sort_order').timeout(_queryTimeout);
-      final values = await _client.from('option_values').select().order('sort_order').timeout(_queryTimeout);
-      return (groups as List).map((g) {
-        final groupValues = (values as List)
-            .where((v) => v['group_id'] == g['id'])
-            .map((v) => OptionValue.fromMap(v as Map<String, dynamic>))
-            .toList();
-        return OptionGroup(key: g['key'] as String, label: g['label'] as String, values: groupValues);
-      }).toList();
-    } on TimeoutException {
-      throw Exception('Koneksi ke server terlalu lama saat memuat opsi produk');
-    }
-  }
+  // No option-group/customization schema exists on the POS side yet.
+  Future<List<OptionGroup>> fetchOptionGroups() async => const [];
 }

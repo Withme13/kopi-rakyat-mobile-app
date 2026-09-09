@@ -37,11 +37,13 @@ class ProfileScreen extends ConsumerWidget {
         _Row(Icons.language, 'Ubah Bahasa Aplikasi', onTap: (c, r) => showToast(c, 'Bahasa: Indonesia · English')),
       ],
       'Pesan': [
-        _Row(Icons.receipt_long_outlined, 'Riwayat Pesanan', onTap: (c, r) async {
-          final userId = r.read(currentUserProvider)?.id;
-          if (userId == null) return;
-          final rows = await r.read(supabaseClientProvider).from('orders').select('id').eq('user_id', userId).order('created_at', ascending: false).limit(1);
-          if (rows.isNotEmpty && c.mounted) c.push('/tracking/${rows.first['id']}');
+        _Row(Icons.receipt_long_outlined, 'Riwayat Pesanan', onTap: (c, r) {
+          final last = r.read(orderRepositoryProvider).lastOrder;
+          if (last != null) {
+            c.push('/tracking/${last.id}');
+          } else {
+            showToast(c, 'Belum ada pesanan aktif');
+          }
         }),
         _Row(Icons.credit_card, 'Metode Pembayaran', onTap: (c, r) => c.push('/checkout')),
         _Row(Icons.local_shipping_outlined, 'Pesanan Jumlah Besar', tag: 'Baru', onTap: (c, r) => showToast(c, 'Form pesanan grosir menyusul')),

@@ -23,8 +23,7 @@ final authRepositoryProvider =
     Provider<AuthRepository>((ref) => AuthRepository(ref.watch(supabaseClientProvider)));
 final productRepositoryProvider =
     Provider<ProductRepository>((ref) => ProductRepository(ref.watch(supabaseClientProvider)));
-final storeRepositoryProvider =
-    Provider<StoreRepository>((ref) => StoreRepository(ref.watch(supabaseClientProvider)));
+final storeRepositoryProvider = Provider<StoreRepository>((ref) => StoreRepository());
 final voucherRepositoryProvider =
     Provider<VoucherRepository>((ref) => VoucherRepository(ref.watch(supabaseClientProvider)));
 final rewardRepositoryProvider =
@@ -37,7 +36,6 @@ final posApiServiceProvider = Provider<PosApiService>(
 );
 final orderRepositoryProvider = Provider<OrderRepository>(
   (ref) => OrderRepository(
-    ref.watch(supabaseClientProvider),
     ref.watch(paymentGatewayProvider),
     ref.watch(posApiServiceProvider),
   ),

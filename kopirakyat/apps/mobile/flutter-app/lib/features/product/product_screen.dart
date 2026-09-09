@@ -199,8 +199,12 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
                                     qty: _qty,
                                     unitPrice: unit,
                                   );
+                              // Capture the router before popping — `context` here belongs to
+                              // this (about-to-be-disposed) route, so it can't be used for
+                              // navigation once the SnackBar's "Lihat keranjang" is tapped later.
+                              final router = GoRouter.of(context);
                               context.pop();
-                              showToast(context, '$_qty× ${product.name} masuk keranjang', onViewCart: () => context.push('/cart'));
+                              showToast(context, '$_qty× ${product.name} masuk keranjang', onViewCart: () => router.push('/cart'));
                             },
                           ),
                         ),

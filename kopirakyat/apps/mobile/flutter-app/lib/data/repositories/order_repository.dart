@@ -1,23 +1,29 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
-
 import '../../models/cart_line.dart';
 import '../../models/fulfilment_mode.dart';
 import '../../models/order.dart';
 import '../../services/pos_api_service.dart';
 import 'payment_gateway.dart';
 
+/// Places orders straight through the POS's `mobileOrdersApi` — there is no
+/// `place_order` RPC or `orders`/`order_items` table on the POS's Supabase
+/// project, so order data lives only in-memory here for the session
+/// (enough to drive the tracking screen's stage simulation) rather than
+/// being queried back from Supabase.
 class OrderRepository {
-  OrderRepository(this._client, this._paymentGateway, this._posApiService);
+  OrderRepository(this._paymentGateway, this._posApiService);
 
-  final SupabaseClient _client;
   final PaymentGateway _paymentGateway;
   final PosApiService _posApiService;
 
-  /// Charges via [PaymentGateway] then atomically places the order through
-  /// the `place_order` RPC (see `supabase/migrations`), which also grants
-  /// the loyalty stamp. Throws if payment fails or the user has no session.
+  final Map<String, AppOrder> _orders = {};
+  AppOrder? _last;
+  int _seq = 0;
+
+  AppOrder? get lastOrder => _last;
+
   Future<AppOrder> placeOrder({
     required String storeId,
+    required String storeName,
     required FulfilmentMode fulfilmentMode,
     String? tableNumber,
     String? addressId,
@@ -35,27 +41,13 @@ class OrderRepository {
       throw StateError('Pembayaran gagal, coba lagi.');
     }
 
-    final row = await _client.rpc('place_order', params: {
-      'p_store_id': storeId,
-      'p_fulfilment_mode': fulfilmentMode.db,
-      'p_table_number': tableNumber,
-      'p_address_id': addressId,
-      'p_scheduled_for': scheduledFor?.toIso8601String(),
-      'p_payment_method': paymentMethod,
-      'p_payment_provider': _paymentGateway.providerId,
-      'p_subtotal': subtotal,
-      'p_discount': discount,
-      'p_delivery_fee': deliveryFee,
-      'p_total': total,
-      'p_voucher_code': voucherCode,
-      'p_items': lines.map((l) => l.toOrderItem()).toList(),
-    });
+    _seq += 1;
+    final externalOrderId = 'app-${DateTime.now().millisecondsSinceEpoch}-$_seq';
 
-    final orderId = row['id'] as String;
-
+    final Map<String, dynamic> posOrder;
     try {
-      await _posApiService.sendOrder(
-        externalOrderId: orderId,
+      posOrder = await _posApiService.sendOrder(
+        externalOrderId: externalOrderId,
         tableName: tableNumber,
         storeId: storeId,
         fulfilmentMode: fulfilmentMode.db,
@@ -82,20 +74,44 @@ class OrderRepository {
       throw StateError('Order dibuat di app, tapi gagal dikirim ke POS: $e');
     }
 
-    return fetchOrder(orderId);
+    final orderNo = posOrder['orderNumber'] as String? ?? externalOrderId;
+    final order = AppOrder(
+      id: posOrder['id'] as String? ?? externalOrderId,
+      orderNo: orderNo,
+      fulfilmentMode: fulfilmentMode,
+      tableNumber: tableNumber,
+      paymentMethod: paymentMethod,
+      total: (posOrder['total'] as num?)?.toInt() ?? total,
+      status: posOrder['status'] as String? ?? 'new',
+      stage: 0,
+      pickupCode: orderNo.split('-').last,
+      storeName: storeName,
+      items: lines
+          .map((l) => OrderItemView(nameSnapshot: l.product.name, qty: l.qty, lineTotal: l.lineTotal))
+          .toList(),
+    );
+
+    _orders[order.id] = order;
+    _last = order;
+    return order;
   }
 
   Future<AppOrder> fetchOrder(String orderId) async {
-    final row = await _client
-        .from('orders')
-        .select('*, stores(name), order_items(*)')
-        .eq('id', orderId)
-        .single();
-    return AppOrder.fromMap(row);
+    final order = _orders[orderId];
+    if (order == null) {
+      throw StateError('Order tidak ditemukan');
+    }
+    return order;
   }
 
   Future<AppOrder> advanceStage(String orderId) async {
-    final row = await _client.rpc('advance_order_stage', params: {'p_order_id': orderId});
-    return fetchOrder((row as Map<String, dynamic>)['id'] as String);
+    final current = _orders[orderId];
+    if (current == null) {
+      throw StateError('Order tidak ditemukan');
+    }
+    final next = current.copyWith(stage: (current.stage + 1).clamp(0, 3));
+    _orders[orderId] = next;
+    if (_last?.id == orderId) _last = next;
+    return next;
   }
 }

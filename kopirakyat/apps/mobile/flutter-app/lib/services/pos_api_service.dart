@@ -36,8 +36,10 @@ class PosApiService {
 
   /// Mirrors `createOrderSchema` in `mobileOrdersApi.ts`. The POS recomputes
   /// prices/subtotal/total itself from the current menu snapshot, so those
-  /// aren't sent — only `discount` is accepted from the client.
-  Future<void> sendOrder({
+  /// aren't sent — only `discount` is accepted from the client. Returns the
+  /// POS's own order record (`data`) so the app can show its real order
+  /// number/total/status instead of fabricating one locally.
+  Future<Map<String, dynamic>> sendOrder({
     required String externalOrderId,
     required List<PosOrderItem> items,
     String? customerName,
@@ -80,5 +82,8 @@ class PosApiService {
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw Exception('Gagal kirim order ke POS: ${response.statusCode} - ${response.body}');
     }
+
+    final decoded = jsonDecode(response.body) as Map<String, dynamic>;
+    return decoded['data'] as Map<String, dynamic>;
   }
 }

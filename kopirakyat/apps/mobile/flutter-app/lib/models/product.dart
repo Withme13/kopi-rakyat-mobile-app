@@ -27,18 +27,23 @@ class Product {
 
   String get initial => name.isNotEmpty ? name[0] : '?';
 
-  factory Product.fromMap(Map<String, dynamic> map) {
+  /// Reads a row from the POS's own `menus` table (joined with
+  /// `menu_categories`) instead of the prototype's `products` schema —
+  /// the POS has no slug/kind/description/origin/badge/image concept, so
+  /// those are filled in with safe defaults.
+  factory Product.fromMenuMap(Map<String, dynamic> map) {
+    final category = map['menu_categories'] as Map<String, dynamic>?;
     return Product(
       id: map['id'] as String,
-      slug: map['slug'] as String,
+      slug: map['id'] as String,
       name: map['name'] as String,
-      kind: (map['kind'] as String) == 'merch' ? ProductKind.merch : ProductKind.drink,
-      categoryKey: (map['categories']?['key'] as String?) ?? '',
-      basePrice: map['base_price'] as int,
-      description: map['description'] as String? ?? '',
-      origin: map['origin'] as String? ?? '',
-      badge: map['badge'] as String?,
-      imageUrl: map['image_url'] as String?,
+      kind: ProductKind.drink,
+      categoryKey: (category?['name'] as String?)?.toLowerCase().replaceAll(RegExp(r'\s+'), '_') ?? '',
+      basePrice: (map['price'] as num).toInt(),
+      description: '',
+      origin: '',
+      badge: null,
+      imageUrl: null,
     );
   }
 }

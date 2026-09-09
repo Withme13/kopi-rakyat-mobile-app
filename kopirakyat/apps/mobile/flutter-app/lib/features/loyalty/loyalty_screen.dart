@@ -121,13 +121,11 @@ class LoyaltyScreen extends ConsumerWidget {
                   _QuickTile(
                     icon: Icons.local_shipping_outlined,
                     label: 'Cek Pengiriman',
-                    onTap: () async {
-                      final userId = ref.read(currentUserProvider)?.id;
-                      if (userId == null) return;
-                      final rows = await ref.read(supabaseClientProvider).from('orders').select('id').eq('user_id', userId).order('created_at', ascending: false).limit(1);
-                      if (rows.isNotEmpty) {
-                        if (context.mounted) context.push('/tracking/${rows.first['id']}');
-                      } else if (context.mounted) {
+                    onTap: () {
+                      final last = ref.read(orderRepositoryProvider).lastOrder;
+                      if (last != null) {
+                        context.push('/tracking/${last.id}');
+                      } else {
                         showToast(context, 'Belum ada pesanan aktif');
                       }
                     },

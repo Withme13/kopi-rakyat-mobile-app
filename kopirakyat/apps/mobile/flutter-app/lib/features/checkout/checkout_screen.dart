@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../data/providers.dart';
+import '../../models/address.dart';
 import '../../models/fulfilment_mode.dart';
 import '../../state/cart_controller.dart';
 import '../../state/profile_controller.dart';
@@ -48,6 +49,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             storeName: store.name,
             fulfilmentMode: cart.fulfilmentMode,
             tableNumber: cart.table,
+            deliveryAddress: cart.deliveryAddress,
             paymentMethod: cart.paymentMethod,
             lines: cart.lines,
             subtotal: cart.subtotal,
@@ -67,6 +69,11 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     } finally {
       if (mounted) setState(() => _placing = false);
     }
+  }
+
+  Future<void> _pickDeliveryAddress(BuildContext context, CartController controller, Address? current) async {
+    final picked = await context.push<Address>('/address-picker', extra: current);
+    if (picked != null) controller.setDeliveryAddress(picked);
   }
 
   @override
@@ -93,10 +100,12 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         ),
       FulfilmentMode.delivery => (
           label: 'Kirim ke',
-          title: 'Rumah · Rangga',
-          sub: 'Jl. Bangka II No. 7, Jaksel · 25–35 menit · ongkir Rp 12.000',
-          cta: 'Ganti alamat',
-          action: () => showToast(context, 'Daftar alamat belum ada di prototype'),
+          title: cart.deliveryAddress != null ? cart.deliveryAddress!.label : 'Belum pilih alamat',
+          sub: cart.deliveryAddress != null
+              ? '${cart.deliveryAddress!.formattedAddress} · ongkir Rp 12.000'
+              : 'Pilih lokasi pengiriman di peta',
+          cta: cart.deliveryAddress != null ? 'Ganti alamat' : 'Pilih alamat',
+          action: () => _pickDeliveryAddress(context, controller, cart.deliveryAddress),
         ),
       FulfilmentMode.preOrder => (
           label: 'Jadwal',

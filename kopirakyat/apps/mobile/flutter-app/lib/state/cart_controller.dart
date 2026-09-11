@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../models/address.dart';
 import '../models/cart_line.dart';
 import '../models/fulfilment_mode.dart';
 import '../models/product.dart';
@@ -59,6 +60,7 @@ class CartController extends StateNotifier<CartState> {
   void setTable(String? table) => state = state.copyWith(table: table);
   void setPaymentMethod(String method) => state = state.copyWith(paymentMethod: method);
   void setWhen(String when) => state = state.copyWith(when: when);
+  void setDeliveryAddress(Address address) => state = state.copyWith(deliveryAddress: address);
   void setPromoInput(String value) => state = state.copyWith(promoInput: value.toUpperCase());
 
   void applyVoucherResult({required Voucher? voucher, required String message}) {

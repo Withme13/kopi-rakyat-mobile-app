@@ -3,7 +3,9 @@ import 'package:go_router/go_router.dart';
 
 import 'data/providers.dart';
 import 'features/cart/cart_screen.dart';
+import 'features/checkout/address_picker_screen.dart';
 import 'features/checkout/checkout_screen.dart';
+import 'models/address.dart';
 import 'features/home/home_screen.dart';
 import 'features/locator/locator_screen.dart';
 import 'features/loyalty/loyalty_screen.dart';
@@ -49,6 +51,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: '/cart', builder: (context, state) => const CartScreen()),
       GoRoute(path: '/checkout', builder: (context, state) => const CheckoutScreen()),
+      GoRoute(
+        path: '/address-picker',
+        builder: (context, state) => AddressPickerScreen(initialAddress: state.extra as Address?),
+      ),
       GoRoute(
         path: '/tracking/:orderId',
         builder: (context, state) => TrackingScreen(orderId: state.pathParameters['orderId']!),

@@ -1,3 +1,4 @@
+import '../models/address.dart';
 import '../models/cart_line.dart';
 import '../models/fulfilment_mode.dart';
 import '../models/voucher.dart';
@@ -13,6 +14,7 @@ class CartState {
     this.promoInput = '',
     this.appliedVoucher,
     this.promoMessage = 'Punya kode? Coba KOPIRAKYAT.',
+    this.deliveryAddress,
   });
 
   final List<CartLine> lines;
@@ -24,6 +26,7 @@ class CartState {
   final String promoInput;
   final Voucher? appliedVoucher;
   final String promoMessage;
+  final Address? deliveryAddress;
 
   int get cartCount => lines.fold(0, (a, l) => a + l.qty);
   int get subtotal => lines.fold(0, (a, l) => a + l.lineTotal);
@@ -42,6 +45,7 @@ class CartState {
     String? promoInput,
     Object? appliedVoucher = _unset,
     String? promoMessage,
+    Object? deliveryAddress = _unset,
   }) {
     return CartState(
       lines: lines ?? this.lines,
@@ -53,6 +57,7 @@ class CartState {
       promoInput: promoInput ?? this.promoInput,
       appliedVoucher: identical(appliedVoucher, _unset) ? this.appliedVoucher : appliedVoucher as Voucher?,
       promoMessage: promoMessage ?? this.promoMessage,
+      deliveryAddress: identical(deliveryAddress, _unset) ? this.deliveryAddress : deliveryAddress as Address?,
     );
   }
 }

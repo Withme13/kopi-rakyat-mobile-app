@@ -7,6 +7,7 @@ import '../models/product.dart';
 import '../models/reward.dart';
 import '../models/store.dart';
 import '../models/voucher.dart';
+import '../services/geocoding_service.dart';
 import '../services/pos_api_service.dart';
 import 'repositories/auth_repository.dart';
 import 'repositories/order_repository.dart';
@@ -31,6 +32,7 @@ final rewardRepositoryProvider =
 final profileRepositoryProvider =
     Provider<ProfileRepository>((ref) => ProfileRepository(ref.watch(supabaseClientProvider)));
 final paymentGatewayProvider = Provider<PaymentGateway>((ref) => SimulatedPaymentGateway());
+final geocodingServiceProvider = Provider<GeocodingService>((ref) => GeocodingService());
 final posApiServiceProvider = Provider<PosApiService>(
   (ref) => PosApiService(baseUrl: Env.posBaseUrl, apiKey: Env.posApiKey),
 );

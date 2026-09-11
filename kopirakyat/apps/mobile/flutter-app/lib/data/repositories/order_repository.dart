@@ -1,3 +1,4 @@
+import '../../models/address.dart';
 import '../../models/cart_line.dart';
 import '../../models/fulfilment_mode.dart';
 import '../../models/order.dart';
@@ -27,6 +28,7 @@ class OrderRepository {
     required FulfilmentMode fulfilmentMode,
     String? tableNumber,
     String? addressId,
+    Address? deliveryAddress,
     DateTime? scheduledFor,
     required String paymentMethod,
     required List<CartLine> lines,
@@ -49,6 +51,7 @@ class OrderRepository {
       posOrder = await _posApiService.sendOrder(
         externalOrderId: externalOrderId,
         tableName: tableNumber,
+        note: deliveryAddress != null ? 'Kirim ke: ${deliveryAddress.formattedAddress}' : null,
         storeId: storeId,
         fulfilmentMode: fulfilmentMode.db,
         paymentMethod: paymentMethod,
